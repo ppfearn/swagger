@@ -11,40 +11,6 @@ consumes:
 produces:
   - application/json
 paths:
-  /person-identities/self:
-    get:
-      summary: 'person identities self resource, main entry point for the app'
-      operationId: person-identities
-      parameters:
-        - in: header
-          type: string
-          name: Authorization
-          required: true
-        - in: header
-          type: string
-          name: X-EE-API-Originator
-          required: true
-        - in: header
-          type: string
-          name: X-EE-EL-Tracking-Header
-          required: true
-      responses:
-        '200':
-          description: Ok
-          headers:
-            X-EE-Digital-ACR:
-              type: string
-              description: Level of access currently given.
-          schema:
-            $ref: '#/definitions/Person'
-        '403':
-          description: 'This error is returned if the access_token is not eligible to access person identity resource OR This error is returned when scope associated to access token not matched with the required scope. OR In case of Invalid uuid sent in the access token. OR In case of DUPLICATE_ROLE exception from downstream'
-          schema:
-            $ref: '#/definitions/Error403'
-        '500':
-          description: Any internal error on Apigee layer
-          schema:
-            $ref: '#/definitions/Error500'
   /person-identities/{person-id}/billing-accounts/{billing-account-id}/mobile-subscriptions/{msisdn}/data-usage-recommendation:
     get:
       summary: Postpay. Shows average usage of data and recommends a data pass (addon)
@@ -84,99 +50,15 @@ paths:
               description: Level of access currently given.
           schema:
             $ref: '#/definitions/DataUsageRecommendation'
-  /ping:
-    get:
-      summary: ping request to see if the service is running
-      operationId: ping
-      responses:
-        '200':
-          description: Ok
+        '403':
+          description: 'This error is returned if the access_token is not eligible to access person identity resource OR This error is returned when scope associated to access token not matched with the required scope. OR In case of Invalid uuid sent in the access token. OR In case of DUPLICATE_ROLE exception from downstream'
+          schema:
+            $ref: '#/definitions/Error403'
+        '500':
+          description: Any internal error on Apigee layer
+          schema:
+            $ref: '#/definitions/Error500'
 definitions:
-  Error403:
-    type: object
-    description: 403 error
-    properties:
-      code:
-        type: string
-        example: '52'
-      message:
-        type: string
-        example: Forbidden user
-  Error500:
-    type: object
-    description: 500 error
-    properties:
-      code:
-        type: string
-        example: '01'
-      message:
-        type: string
-        example: Internal Error
-  Person:
-    type: object
-    properties:
-      firstName:
-        type: string
-        description: L2(LO/EU) | First name of the user.
-        example: Carlos
-      lastName:
-        type: string
-        description: L2(LO/EU) | Last name of the user.
-        example: Fandango
-      email:
-        type: string
-        description: L2(LO/EU) | Email address of the user
-      birthDate:
-        type: string
-        description: L2(LO/EU) | birth date of the user.
-      isEmailVerified:
-        type: boolean
-        description: L2(LO/EU) | shows if the user's email is verified
-        example: true
-      billing-accounts:
-        type: array
-        items:
-          $ref: '#/definitions/BillingAccount'
-      mobile-subscriptions:
-        type: array
-        items:
-          $ref: '#/definitions/MobileSubscription'
-      links:
-        $ref: '#/definitions/LinkPersonArray'
-    required:
-      - isEmailVerified
-      - email
-  BillingAccount:
-    type: object
-    properties:
-      accountNumber:
-        type: string
-        description: account number
-        example: 999999
-      isAccountClosed:
-        type: boolean
-        description: shows if the users account is closed
-        example: false
-      links:
-        $ref: '#/definitions/LinkBillingArray'
-  MobileSubscription:
-    type: object
-    properties:
-      msisdn:
-        type: string
-        description: 'L1, L2, (LO/EU) Represents phone number'
-        example: 447777777771
-      isEndUser:
-        type: boolean
-        description: 'L1, L2, (LO/EU) Represents role of a person, always false for L1 authenticated user. (True if role is end user role for L2
-          authenticated user)'
-        example: true
-      links:
-        $ref: '#/definitions/LinkPersonArray'
-    required:
-      - msisdn
-      - isEndUser
-      - links
   Addons:
     type: object
     properties:
@@ -276,49 +158,7 @@ definitions:
     required:
       - avgDataUsedPerDay
       - avgDataUsedPerDayUnits
-  LinkPersonArray:
-    type: array
-    items:
-      properties:
-        rel:
-          type: string
-        href:
-          type: string
-    example:
-      - rel: self
-        href: >-
-          https://{host}/digital/v1/person-identities/self/billing-accounts/{billing-account-id}
-        _comment: TEST COMMENT
-      - rel: billing-account
-        href: >-
-          https://{host}/digital/v1/person-identities/self/billing-accounts/
-        _comment: not on L1 etc
-  LinkBillingArray:
-    type: array
-    items:
-      properties:
-        rel:
-          type: string
-        href:
-          type: string
-    example:
-      - rel: self
-        href: >-
-          https://{host}/digital/v1/person-identities/self/billing-accounts/{billing-account-id}
-        _comment: TEST COMMENT
-  LinkSubscriptionArray:
-    type: array
-    items:
-      properties:
-        rel:
-          type: string
-        href:
-          type: string
-    example:
-      - rel: self
-        href: >-
-          https://{host}/digital/v1/person-identities/self/billing-accounts/{billing-account-id}/mobile-subscriptions/{msisdn}
-        _comment: TEST COMMENT
+  
   LinkDataUsageRecommendationArray:
     type: array
     items:
@@ -332,3 +172,23 @@ definitions:
         href: >-
           https://{host}/digital/v1/person-identities/self/billing-accounts/{billing-account-id}/mobile-subscriptions/{msisdn}/data-usage-recommendation
         _comment: TEST COMMENT
+  Error403:
+      type: object
+      description: 403 error
+      properties:
+        code:
+          type: string
+          example: '52'
+        message:
+          type: string
+          example: Forbidden user
+    Error500:
+      type: object
+      description: 500 error
+      properties:
+        code:
+          type: string
+          example: '01'
+        message:
+          type: string
+          example: Internal Error
