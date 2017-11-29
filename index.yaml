@@ -1,8 +1,8 @@
 swagger: '2.0'
 info:
   version: 1.0.0
-  title: Simple API
-host: 52.30.174.58
+  title: Data Usage Recommendation API (Draft)
+host: example.com
 schemes:
   - https
 basePath: /digital/v1
@@ -59,6 +59,43 @@ paths:
           schema:
             $ref: '#/definitions/Error500'
 definitions:
+  DataUsageRecommendation:
+    type: object
+    properties:
+      avgDataUsedPerDay:
+        type: number
+        description:  average usage of data per day. LO/EU Prepay
+        example: 1.5
+      avgDataUsedPerDayUnits:
+        type: string
+        description: units to accompany the data usage. LO/EU Prepay
+        example: GB
+      daysRemainingOfCurrentBillingCycle:
+        type: number
+        description: number of days remaining of current billing cycle
+        example: 3
+      dataShortfall:
+        type: number
+        description:  data shortfall (amount of data required to get through to next bill cycle). LO/EU Prepay
+        example: 1.5
+      dataShortfallUnits:
+        type: string
+        description:  data shortfall units. LO/EU Prepay
+        example: GB
+      daysRemainingBeforeDataOut:
+        type: number
+        description: number of days before data will run out
+        example: 2.5
+      addOns:
+        type: array
+        description: recommended addons by oder of preference - Best match for data requirement, best match below (will fall short), best match above, remaining addons. LO/EU Prepay
+        items:
+          $ref: '#/definitions/Addon'
+      links:
+        $ref: '#/definitions/LinkDataUsageRecommendationArray'
+    required:
+      - avgDataUsedPerDay
+      - avgDataUsedPerDayUnits
   Addons:
     type: object
     properties:
@@ -121,44 +158,6 @@ definitions:
       - description
       - isFree
       - isRemovable
-  DataUsageRecommendation:
-    type: object
-    properties:
-      avgDataUsedPerDay:
-        type: number
-        description:  average usage of data per day. LO/EU Prepay
-        example: 1.5
-      avgDataUsedPerDayUnits:
-        type: string
-        description: units to accompany the data usage. LO/EU Prepay
-        example: GB
-      daysRemainingOfCurrentBillingCycle:
-        type: number
-        description: number of days remaining of current billing cycle
-        example: 3
-      dataShortfall:
-        type: number
-        description:  data shortfall (amount of data required to get through to next bill cycle). LO/EU Prepay
-        example: 1.5
-      dataShortfallUnits:
-        type: string
-        description:  data shortfall units. LO/EU Prepay
-        example: GB
-      daysRemainingBeforeDataOut:
-        type: number
-        description: number of days before data will run out
-        example: 2.5
-      addOns:
-        type: array
-        description: recommended addons by oder of preference - Best match for data requirement, best match below (will fall short), best match above, remaining addons. LO/EU Prepay
-        items:
-          $ref: '#/definitions/Addon'
-      links:
-        $ref: '#/definitions/LinkDataUsageRecommendationArray'
-    required:
-      - avgDataUsedPerDay
-      - avgDataUsedPerDayUnits
-  
   LinkDataUsageRecommendationArray:
     type: array
     items:
@@ -171,7 +170,6 @@ definitions:
       - rel: self
         href: >-
           https://{host}/digital/v1/person-identities/self/billing-accounts/{billing-account-id}/mobile-subscriptions/{msisdn}/data-usage-recommendation
-        _comment: TEST COMMENT
   Error403:
     type: object
     description: 403 error
