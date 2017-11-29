@@ -1,0 +1,334 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Simple API
+host: 52.30.174.58
+schemes:
+  - https
+basePath: /digital/v1
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /person-identities/self:
+    get:
+      summary: 'person identities self resource, main entry point for the app'
+      operationId: person-identities
+      parameters:
+        - in: header
+          type: string
+          name: Authorization
+          required: true
+        - in: header
+          type: string
+          name: X-EE-API-Originator
+          required: true
+        - in: header
+          type: string
+          name: X-EE-EL-Tracking-Header
+          required: true
+      responses:
+        '200':
+          description: Ok
+          headers:
+            X-EE-Digital-ACR:
+              type: string
+              description: Level of access currently given.
+          schema:
+            $ref: '#/definitions/Person'
+        '403':
+          description: 'This error is returned if the access_token is not eligible to access person identity resource OR This error is returned when scope associated to access token not matched with the required scope. OR In case of Invalid uuid sent in the access token. OR In case of DUPLICATE_ROLE exception from downstream'
+          schema:
+            $ref: '#/definitions/Error403'
+        '500':
+          description: Any internal error on Apigee layer
+          schema:
+            $ref: '#/definitions/Error500'
+  /person-identities/{person-id}/billing-accounts/{billing-account-id}/mobile-subscriptions/{msisdn}/data-usage-recommendation:
+    get:
+      summary: Postpay. Shows average usage of data and recommends a data pass (addon)
+      operationId: data-usage-recommendation
+      parameters:
+        - in: path
+          name: person-id
+          type: string
+          required: true
+          description: usually self
+        - in: path
+          name: billing-account-id
+          required: true
+          type: string
+        - in: path
+          name: msisdn
+          required: true
+          type: string
+        - in: header
+          name: Authorization
+          required: true
+          type: string
+        - in: header
+          name: X-EE-API-Originator
+          required: true
+          type: string
+        - in: header
+          name: X-EE-EL-Tracking-Header
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Ok
+          headers:
+            X-EE-Digital-ACR:
+              type: string
+              description: Level of access currently given.
+          schema:
+            $ref: '#/definitions/DataUsageRecommendation'
+  /ping:
+    get:
+      summary: ping request to see if the service is running
+      operationId: ping
+      responses:
+        '200':
+          description: Ok
+definitions:
+  Error403:
+    type: object
+    description: 403 error
+    properties:
+      code:
+        type: string
+        example: '52'
+      message:
+        type: string
+        example: Forbidden user
+  Error500:
+    type: object
+    description: 500 error
+    properties:
+      code:
+        type: string
+        example: '01'
+      message:
+        type: string
+        example: Internal Error
+  Person:
+    type: object
+    properties:
+      firstName:
+        type: string
+        description: L2(LO/EU) | First name of the user.
+        example: Carlos
+      lastName:
+        type: string
+        description: L2(LO/EU) | Last name of the user.
+        example: Fandango
+      email:
+        type: string
+        description: L2(LO/EU) | Email address of the user
+      birthDate:
+        type: string
+        description: L2(LO/EU) | birth date of the user.
+      isEmailVerified:
+        type: boolean
+        description: L2(LO/EU) | shows if the user's email is verified
+        example: true
+      billing-accounts:
+        type: array
+        items:
+          $ref: '#/definitions/BillingAccount'
+      mobile-subscriptions:
+        type: array
+        items:
+          $ref: '#/definitions/MobileSubscription'
+      links:
+        $ref: '#/definitions/LinkPersonArray'
+    required:
+      - isEmailVerified
+      - email
+  BillingAccount:
+    type: object
+    properties:
+      accountNumber:
+        type: string
+        description: account number
+        example: 999999
+      isAccountClosed:
+        type: boolean
+        description: shows if the users account is closed
+        example: false
+      links:
+        $ref: '#/definitions/LinkBillingArray'
+  MobileSubscription:
+    type: object
+    properties:
+      msisdn:
+        type: string
+        description: 'L1, L2, (LO/EU) Represents phone number'
+        example: 447777777771
+      isEndUser:
+        type: boolean
+        description: 'L1, L2, (LO/EU) Represents role of a person, always false for L1 authenticated user. (True if role is end user role for L2
+          authenticated user)'
+        example: true
+      links:
+        $ref: '#/definitions/LinkPersonArray'
+    required:
+      - msisdn
+      - isEndUser
+      - links
+  Addons:
+    type: object
+    properties:
+      addOnCount:
+         type: integer
+         description:  'add-on count, Set to Zero if no add-on available in array.'
+         example: 1
+      addOns:
+        type: array
+        items:
+          $ref: '#/definitions/Addon'
+    required:
+      - addOnCount
+  Addon:
+    type: object
+    properties:
+      addOnId:
+        type: string
+        description: 'unique add-on id. Excalibur - EXC_{socSequenceNum}_{soc} LO/EU Postpay'
+        example: NEX_2MCM
+      title:
+        type: string
+        example: short title
+      description:
+        type: string
+        description: 'addOn description. Do not return this field, if description is not returned from hybris for Excalibur SOC.'
+        example: longer addon description
+      length:
+        type: number
+        description: 'duration of addOn WEEKLY = 7 MONTHLY = 30 Do not return this field for Excalibur. For Nexus - Configure as mentioned above if categories matches WEEKLY or MONTHLY, else do not return the field. For PDF - Trim the last character, convert to number and assign to response. Do not return if the field if not available. LO/EU Prepay & Postpay'
+        example: 30
+      lengthUnits:
+        type: string
+        description: 'length units Do not return this field for Excalibur. For nexus - \"Days\" hardcoded only if length contains a valid value. For PDF - \"hours\" hardcoded if length ends with \"h\" character, else set \"Days\". LO/EU Prepay & Postpay'
+        example: Days
+      chargeFrequency:
+        type: string
+        description: 'charge frequency. Possible values are Monthly,Annually,Quarterly. Do not return for Nexus For Excalibur - set \"Monthly\" unless any of the other availableChargeDetails has a value greater than 0 for the \"recurringCharge\" field. For PDF - Set \"Monthly\" if Info[].PassType contains \"AFUP\". Otherwise do not return this field. LO/EU Postpay'
+        example: Monthly
+      expiryDate:
+        type: string
+        format: date
+        description: addon expiration date LO/EU Postpay
+        example: '2017-01-01'
+      costGbp:
+        type: string
+        description: 'addon cost. Convert to GBP representation. It is a Mandatory field, Throw Missing Mandatory Data error, if no value returned for cost from backend. LO/EU Postpay.'
+        example: "10.50"
+      isFree:
+        type: boolean
+        description: Represents the addon is on free allowance LO/EU Postpay
+        example: false
+      isRemovable:
+        type: boolean
+        description: 'addon is eligible for removal. For Excalibur - Set to true if \"modifiable\" is set to \"Y\" and false if \"modifiable\" is set to \"N\". Throw Missing Mandatory Data error, if model is not returned from Backend. Do not populate for Nexus. LO/EU Postpay'
+        example: true
+    required:
+      - addOnId
+      - title
+      - description
+      - isFree
+      - isRemovable
+  DataUsageRecommendation:
+    type: object
+    properties:
+      avgDataUsedPerDay:
+        type: number
+        description:  average usage of data per day. LO/EU Prepay
+        example: 1.5
+      avgDataUsedPerDayUnits:
+        type: string
+        description: units to accompany the data usage. LO/EU Prepay
+        example: GB
+      daysRemainingOfCurrentBillingCycle:
+        type: number
+        description: number of days remaining of current billing cycle
+        example: 3
+      dataShortfall:
+        type: number
+        description:  data shortfall (amount of data required to get through to next bill cycle). LO/EU Prepay
+        example: 1.5
+      dataShortfallUnits:
+        type: string
+        description:  data shortfall units. LO/EU Prepay
+        example: GB
+      daysRemainingBeforeDataOut:
+        type: number
+        description: number of days before data will run out
+        example: 2.5
+      addOns:
+        type: array
+        description: recommended addons by oder of preference - Best match for data requirement, best match below (will fall short), best match above, remaining addons. LO/EU Prepay
+        items:
+          $ref: '#/definitions/Addon'
+      links:
+        $ref: '#/definitions/LinkDataUsageRecommendationArray'
+    required:
+      - avgDataUsedPerDay
+      - avgDataUsedPerDayUnits
+  LinkPersonArray:
+    type: array
+    items:
+      properties:
+        rel:
+          type: string
+        href:
+          type: string
+    example:
+      - rel: self
+        href: >-
+          https://{host}/digital/v1/person-identities/self/billing-accounts/{billing-account-id}
+        _comment: TEST COMMENT
+      - rel: billing-account
+        href: >-
+          https://{host}/digital/v1/person-identities/self/billing-accounts/
+        _comment: not on L1 etc
+  LinkBillingArray:
+    type: array
+    items:
+      properties:
+        rel:
+          type: string
+        href:
+          type: string
+    example:
+      - rel: self
+        href: >-
+          https://{host}/digital/v1/person-identities/self/billing-accounts/{billing-account-id}
+        _comment: TEST COMMENT
+  LinkSubscriptionArray:
+    type: array
+    items:
+      properties:
+        rel:
+          type: string
+        href:
+          type: string
+    example:
+      - rel: self
+        href: >-
+          https://{host}/digital/v1/person-identities/self/billing-accounts/{billing-account-id}/mobile-subscriptions/{msisdn}
+        _comment: TEST COMMENT
+  LinkDataUsageRecommendationArray:
+    type: array
+    items:
+      properties:
+        rel:
+          type: string
+        href:
+          type: string
+    example:
+      - rel: self
+        href: >-
+          https://{host}/digital/v1/person-identities/self/billing-accounts/{billing-account-id}/mobile-subscriptions/{msisdn}/data-usage-recommendation
+        _comment: TEST COMMENT
