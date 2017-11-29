@@ -173,15 +173,15 @@ definitions:
           https://{host}/digital/v1/person-identities/self/billing-accounts/{billing-account-id}/mobile-subscriptions/{msisdn}/data-usage-recommendation
         _comment: TEST COMMENT
   Error403:
-      type: object
-      description: 403 error
-      properties:
-        code:
-          type: string
-          example: '52'
-        message:
-          type: string
-          example: Forbidden user
+    type: object
+    description: 403 error
+    properties:
+      code:
+        type: string
+        example: '52'
+      message:
+        type: string
+        example: Forbidden user
   Error500:
     type: object
     description: 500 error
