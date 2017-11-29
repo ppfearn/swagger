@@ -182,13 +182,13 @@ definitions:
         message:
           type: string
           example: Forbidden user
-    Error500:
-      type: object
-      description: 500 error
-      properties:
-        code:
-          type: string
-          example: '01'
-        message:
-          type: string
-          example: Internal Error
+  Error500:
+    type: object
+    description: 500 error
+    properties:
+      code:
+        type: string
+        example: '01'
+      message:
+        type: string
+        example: Internal Error
